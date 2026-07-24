@@ -134,7 +134,14 @@ static atomic_uint_least64_t g_dwa_profile_ac_ns       = 0;
 static atomic_uint_least64_t g_dwa_profile_dc_ns       = 0;
 static atomic_uint_least64_t g_dwa_profile_rle_ns      = 0;
 static atomic_uint_least64_t g_dwa_profile_dct_ns      = 0;
-static atomic_uint_least64_t g_dwa_profile_assemble_ns = 0;
+/*
+ * Assemble is split into its two channel-scheme paths (mirrors the two
+ * separately-timed blocks in internal_dwa_compressor.h) so it can be
+ * compared in detail against exrs' more fine-grained assemble breakdown
+ * (see exrs/src/compression/dwa/profile.rs) instead of only as one lump.
+ */
+static atomic_uint_least64_t g_dwa_profile_assemble_rle_ns     = 0;
+static atomic_uint_least64_t g_dwa_profile_assemble_unknown_ns = 0;
 static int                   g_dwa_profile_enabled     = -1;
 static int                   g_dwa_profile_registered   = 0;
 
@@ -151,13 +158,14 @@ dwa_profile_print (void)
 {
     fprintf (
         stderr,
-        "openexr-dwa-profile-total-ns: unknown=%llu ac=%llu dc=%llu rle=%llu dct=%llu assemble=%llu\n",
+        "openexr-dwa-profile-total-ns: unknown=%llu ac=%llu dc=%llu rle=%llu dct=%llu assemble_rle=%llu assemble_unknown=%llu\n",
         (unsigned long long) g_dwa_profile_unknown_ns,
         (unsigned long long) g_dwa_profile_ac_ns,
         (unsigned long long) g_dwa_profile_dc_ns,
         (unsigned long long) g_dwa_profile_rle_ns,
         (unsigned long long) g_dwa_profile_dct_ns,
-        (unsigned long long) g_dwa_profile_assemble_ns);
+        (unsigned long long) g_dwa_profile_assemble_rle_ns,
+        (unsigned long long) g_dwa_profile_assemble_unknown_ns);
 }
 
 static int

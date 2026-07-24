@@ -1235,7 +1235,7 @@ DwaCompressor_uncompress (
 
                         row++;
                     }
-                    DWA_PROFILE_END (dwa_prof_t6, g_dwa_profile_assemble_ns);
+                    DWA_PROFILE_END (dwa_prof_t6, g_dwa_profile_assemble_rle_ns);
                 }
 
                 break;
@@ -1276,7 +1276,7 @@ DwaCompressor_uncompress (
                         cd->planarUncBufferEnd += dstScanlineSize;
                         row++;
                     }
-                    DWA_PROFILE_END (dwa_prof_t7, g_dwa_profile_assemble_ns);
+                    DWA_PROFILE_END (dwa_prof_t7, g_dwa_profile_assemble_unknown_ns);
                 }
 
                 break;
