@@ -115,8 +115,73 @@
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <stdatomic.h>
 
 #include "OpenEXRConfigInternal.h"
+
+/*
+ * Scratch per-stage timing for comparing decode-side stage costs against
+ * exrs' `dwa-profile` feature (see exrs/src/compression/dwa/profile.rs).
+ * Gated by the EXR_DWA_PROFILE env var so normal use of this rebuilt
+ * library is silent; totals (not per-iter averages, since this library
+ * doesn't know the caller's iteration count) are printed once at process
+ * exit. Not intended to be committed upstream.
+ */
+static atomic_uint_least64_t g_dwa_profile_unknown_ns  = 0;
+static atomic_uint_least64_t g_dwa_profile_ac_ns       = 0;
+static atomic_uint_least64_t g_dwa_profile_dc_ns       = 0;
+static atomic_uint_least64_t g_dwa_profile_rle_ns      = 0;
+static atomic_uint_least64_t g_dwa_profile_dct_ns      = 0;
+static atomic_uint_least64_t g_dwa_profile_assemble_ns = 0;
+static int                   g_dwa_profile_enabled     = -1;
+static int                   g_dwa_profile_registered   = 0;
+
+static uint64_t
+dwa_profile_now_ns (void)
+{
+    struct timespec ts;
+    clock_gettime (CLOCK_MONOTONIC, &ts);
+    return (uint64_t) ts.tv_sec * 1000000000ull + (uint64_t) ts.tv_nsec;
+}
+
+static void
+dwa_profile_print (void)
+{
+    fprintf (
+        stderr,
+        "openexr-dwa-profile-total-ns: unknown=%llu ac=%llu dc=%llu rle=%llu dct=%llu assemble=%llu\n",
+        (unsigned long long) g_dwa_profile_unknown_ns,
+        (unsigned long long) g_dwa_profile_ac_ns,
+        (unsigned long long) g_dwa_profile_dc_ns,
+        (unsigned long long) g_dwa_profile_rle_ns,
+        (unsigned long long) g_dwa_profile_dct_ns,
+        (unsigned long long) g_dwa_profile_assemble_ns);
+}
+
+static int
+dwa_profile_enabled (void)
+{
+    if (g_dwa_profile_enabled < 0)
+        g_dwa_profile_enabled = (getenv ("EXR_DWA_PROFILE") != NULL) ? 1 : 0;
+    if (g_dwa_profile_enabled && !g_dwa_profile_registered)
+    {
+        g_dwa_profile_registered = 1;
+        atexit (dwa_profile_print);
+    }
+    return g_dwa_profile_enabled;
+}
+
+#define DWA_PROFILE_BEGIN(var)                                               \
+    uint64_t var = dwa_profile_enabled () ? dwa_profile_now_ns () : 0
+#define DWA_PROFILE_END(var, counter)                                        \
+    do                                                                       \
+    {                                                                        \
+        if (dwa_profile_enabled ())                                         \
+            atomic_fetch_add (                                              \
+                &(counter), dwa_profile_now_ns () - (var));                  \
+    } while (0)
 
 #include "internal_dwa_helpers.h"
 

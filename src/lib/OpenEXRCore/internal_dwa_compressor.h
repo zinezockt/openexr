@@ -871,6 +871,8 @@ DwaCompressor_uncompress (
     // Uncompress the UNKNOWN data into _planarUncBuffer[UNKNOWN]
     //
 
+    {
+        DWA_PROFILE_BEGIN (dwa_prof_t0);
     if (unknownCompressedSize > 0)
     {
         size_t actualUnknown;
@@ -892,11 +894,15 @@ DwaCompressor_uncompress (
             return EXR_ERR_CORRUPT_CHUNK;
         }
     }
+        DWA_PROFILE_END (dwa_prof_t0, g_dwa_profile_unknown_ns);
+    }
 
     //
     // Uncompress the AC data into _packedAcBuffer
     //
 
+    {
+        DWA_PROFILE_BEGIN (dwa_prof_t1);
     if (acCompressedSize > 0)
     {
         if (!me->_packedAcBuffer ||
@@ -946,11 +952,15 @@ DwaCompressor_uncompress (
             default: return EXR_ERR_CORRUPT_CHUNK; break;
         }
     }
+        DWA_PROFILE_END (dwa_prof_t1, g_dwa_profile_ac_ns);
+    }
 
     //
     // Uncompress the DC data into _packedDcBuffer
     //
 
+    {
+        DWA_PROFILE_BEGIN (dwa_prof_t2);
     if (dcCompressedSize > 0)
     {
         size_t destLen;
@@ -989,12 +999,16 @@ DwaCompressor_uncompress (
         // if the compressed size is 0, then the uncompressed size must also be zero
         if (totalDcUncompressedCount != 0) { return EXR_ERR_CORRUPT_CHUNK; }
     }
+        DWA_PROFILE_END (dwa_prof_t2, g_dwa_profile_dc_ns);
+    }
 
     //
     // Uncompress the RLE data into _rleBuffer, then unRLE the results
     // into _planarUncBuffer[RLE]
     //
 
+    {
+        DWA_PROFILE_BEGIN (dwa_prof_t3);
     if (rleRawSize > 0)
     {
         size_t dstLen;
@@ -1026,6 +1040,8 @@ DwaCompressor_uncompress (
         {
             return EXR_ERR_CORRUPT_CHUNK;
         }
+    }
+        DWA_PROFILE_END (dwa_prof_t3, g_dwa_profile_rle_ns);
     }
 
     //
@@ -1060,6 +1076,8 @@ DwaCompressor_uncompress (
     // be handled together
     //
 
+    {
+        DWA_PROFILE_BEGIN (dwa_prof_t4);
     for (int csc = 0; csc < me->_numCscChannelSets; ++csc)
     {
         LossyDctDecoder decoder;
@@ -1105,6 +1123,8 @@ DwaCompressor_uncompress (
 
         if (rv != EXR_ERR_SUCCESS) { return rv; }
     }
+        DWA_PROFILE_END (dwa_prof_t4, g_dwa_profile_dct_ns);
+    }
 
     //
     // Setup to handle the remaining channels by themselves
@@ -1135,6 +1155,7 @@ DwaCompressor_uncompress (
                 //
 
                 {
+                    DWA_PROFILE_BEGIN (dwa_prof_t5);
                     const uint16_t* linearLut = NULL;
                     LossyDctDecoder decoder;
 
@@ -1164,6 +1185,7 @@ DwaCompressor_uncompress (
 
                     totalAcUncompressedCount -= decoder._packedAcCount;
                     totalDcUncompressedCount -= decoder._packedDcCount;
+                    DWA_PROFILE_END (dwa_prof_t5, g_dwa_profile_dct_ns);
                     if (rv != EXR_ERR_SUCCESS) { return rv; }
                 }
 
@@ -1179,6 +1201,7 @@ DwaCompressor_uncompress (
                 //
 
                 {
+                    DWA_PROFILE_BEGIN (dwa_prof_t6);
                     int row = 0;
 
                     for (int y = me->_min[1]; y <= me->_max[1]; ++y)
@@ -1212,6 +1235,7 @@ DwaCompressor_uncompress (
 
                         row++;
                     }
+                    DWA_PROFILE_END (dwa_prof_t6, g_dwa_profile_assemble_ns);
                 }
 
                 break;
@@ -1224,6 +1248,7 @@ DwaCompressor_uncompress (
                 //
 
                 {
+                    DWA_PROFILE_BEGIN (dwa_prof_t7);
                     int    row = 0;
                     size_t dstScanlineSize =
                         (size_t) chan->width * (size_t) pixelSize;
@@ -1251,6 +1276,7 @@ DwaCompressor_uncompress (
                         cd->planarUncBufferEnd += dstScanlineSize;
                         row++;
                     }
+                    DWA_PROFILE_END (dwa_prof_t7, g_dwa_profile_assemble_ns);
                 }
 
                 break;
