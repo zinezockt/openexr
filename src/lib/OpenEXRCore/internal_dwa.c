@@ -133,6 +133,13 @@ static atomic_uint_least64_t g_dwa_profile_unknown_ns  = 0;
 static atomic_uint_least64_t g_dwa_profile_ac_ns       = 0;
 static atomic_uint_least64_t g_dwa_profile_dc_ns       = 0;
 static atomic_uint_least64_t g_dwa_profile_rle_ns      = 0;
+/*
+ * RLE sub-stages: the zlib inflate and the byte-RLE expansion that the
+ * timed t3 block runs back to back, split so the stage can be compared
+ * sub-step by sub-step against exrs (RLE_INFLATE_NS / RLE_UNPACK_NS).
+ */
+static atomic_uint_least64_t g_dwa_profile_rle_inflate_ns = 0;
+static atomic_uint_least64_t g_dwa_profile_rle_unpack_ns  = 0;
 static atomic_uint_least64_t g_dwa_profile_dct_ns      = 0;
 /*
  * Assemble is split into its two channel-scheme paths (mirrors the two
@@ -158,11 +165,13 @@ dwa_profile_print (void)
 {
     fprintf (
         stderr,
-        "openexr-dwa-profile-total-ns: unknown=%llu ac=%llu dc=%llu rle=%llu dct=%llu assemble_rle=%llu assemble_unknown=%llu\n",
+        "openexr-dwa-profile-total-ns: unknown=%llu ac=%llu dc=%llu rle=%llu rle_inflate=%llu rle_unpack=%llu dct=%llu assemble_rle=%llu assemble_unknown=%llu\n",
         (unsigned long long) g_dwa_profile_unknown_ns,
         (unsigned long long) g_dwa_profile_ac_ns,
         (unsigned long long) g_dwa_profile_dc_ns,
         (unsigned long long) g_dwa_profile_rle_ns,
+        (unsigned long long) g_dwa_profile_rle_inflate_ns,
+        (unsigned long long) g_dwa_profile_rle_unpack_ns,
         (unsigned long long) g_dwa_profile_dct_ns,
         (unsigned long long) g_dwa_profile_assemble_rle_ns,
         (unsigned long long) g_dwa_profile_assemble_unknown_ns);

@@ -1019,6 +1019,7 @@ DwaCompressor_uncompress (
             return EXR_ERR_CORRUPT_CHUNK;
         }
 
+        DWA_PROFILE_BEGIN (dwa_prof_t3a);
         if (EXR_ERR_SUCCESS != exr_uncompress_buffer (
                                    me->_decode->context,
                                    compressedRleBuf,
@@ -1029,9 +1030,11 @@ DwaCompressor_uncompress (
         {
             return EXR_ERR_CORRUPT_CHUNK;
         }
+        DWA_PROFILE_END (dwa_prof_t3a, g_dwa_profile_rle_inflate_ns);
 
         if (dstLen != rleUncompressedSize) { return EXR_ERR_CORRUPT_CHUNK; }
 
+        DWA_PROFILE_BEGIN (dwa_prof_t3b);
         if (internal_rle_decompress (
                 me->_planarUncBuffer[RLE],
                 rleRawSize,
@@ -1040,6 +1043,7 @@ DwaCompressor_uncompress (
         {
             return EXR_ERR_CORRUPT_CHUNK;
         }
+        DWA_PROFILE_END (dwa_prof_t3b, g_dwa_profile_rle_unpack_ns);
     }
         DWA_PROFILE_END (dwa_prof_t3, g_dwa_profile_rle_ns);
     }
