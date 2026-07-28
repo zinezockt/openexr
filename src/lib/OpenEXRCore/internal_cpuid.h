@@ -8,6 +8,8 @@
 
 #include "OpenEXRConfigInternal.h"
 
+#include <stdlib.h> /* getenv, for the EXR_SIMD_TIER benchmark hook below */
+
 #if defined(i386) || defined(__i386__) || defined(__i386) ||                   \
     defined(_M_X86) || defined(__x86_64__) || (defined(_M_X64) && !defined(_M_ARM64EC))
 #    define OPENEXR_ENABLE_X86_SIMD_CHECK 1
@@ -123,6 +125,36 @@ check_for_x86_simd (int* f16c, int* avx, int* sse2)
     *avx  = 0;
     *sse2 = 0;
 #endif
+
+    //
+    // Benchmark hook (not upstream): EXR_SIMD_TIER lets a single build be run
+    // at a lower SIMD tier than the CPU actually offers, so scalar / SSE2 / AVX
+    // can be compared on one host without three separate library builds. It can
+    // only ever clear capability bits, never set them, so it cannot make the
+    // library issue an instruction the CPU lacks.
+    //
+    //   EXR_SIMD_TIER=scalar   ->  no sse2, no avx, no f16c
+    //   EXR_SIMD_TIER=sse2     ->  sse2 only
+    //   EXR_SIMD_TIER=avx      ->  whatever cpuid found
+    //
+    {
+        static int tier = -1; /* -1 unresolved, 0 scalar, 1 sse2, 2 uncapped */
+        if (tier < 0)
+        {
+            const char* env = getenv ("EXR_SIMD_TIER");
+            if (env == NULL) { tier = 2; }
+            else if (env[0] == 's' && env[1] == 'c') { tier = 0; } /* scalar */
+            else if (env[0] == 's') { tier = 1; }                  /* sse / sse2 */
+            else { tier = 2; }                                     /* avx / anything else */
+        }
+
+        if (tier < 2)
+        {
+            *avx  = 0;
+            *f16c = 0;
+        }
+        if (tier < 1) { *sse2 = 0; }
+    }
 }
 
 static inline int
