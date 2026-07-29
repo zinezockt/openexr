@@ -1,0 +1,16 @@
+{
+	"InstallScripts" : 
+	[
+		"/mnt/ssd/Programmieren/OpenEXR/openexr/build-perf/cmake_install.cmake",
+		"/mnt/ssd/Programmieren/OpenEXR/openexr/build-perf/cmake/cmake_install.cmake",
+		"/mnt/ssd/Programmieren/OpenEXR/openexr/build-perf/src/lib/cmake_install.cmake",
+		"/mnt/ssd/Programmieren/OpenEXR/openexr/build-perf/src/lib/Iex/cmake_install.cmake",
+		"/mnt/ssd/Programmieren/OpenEXR/openexr/build-perf/src/lib/IlmThread/cmake_install.cmake",
+		"/mnt/ssd/Programmieren/OpenEXR/openexr/build-perf/src/lib/OpenEXRCore/cmake_install.cmake",
+		"/mnt/ssd/Programmieren/OpenEXR/openexr/build-perf/src/lib/OpenEXR/cmake_install.cmake",
+		"/mnt/ssd/Programmieren/OpenEXR/openexr/build-perf/src/lib/OpenEXRUtil/cmake_install.cmake",
+		"/mnt/ssd/Programmieren/OpenEXR/openexr/build-perf/src/test/cmake_install.cmake",
+		"/mnt/ssd/Programmieren/OpenEXR/openexr/build-perf/website/src/cmake_install.cmake"
+	],
+	"Parallel" : false
+}
